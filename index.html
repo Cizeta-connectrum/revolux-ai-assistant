@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Netlify Function Test</title>
+</head>
+<body>
+  <h1>Netlify Function Test</h1>
+  <p>このボタンを押して、下のボックスにメッセージが表示されれば成功です。</p>
+  <button id="test-button" style="padding: 10px 20px; font-size: 16px;">Test Function</button>
+  <pre id="response" style="margin-top: 20px; padding: 10px; border: 1px solid #ccc; background-color: #f9f9f9;"></pre>
+  <script>
+    document.getElementById('test-button').addEventListener('click', async () => {
+      const pre = document.getElementById('response');
+      pre.textContent = 'Calling function...';
+      try {
+        // Netlifyの連携機能を呼び出します
+        const res = await fetch('/.netlify/functions/ask-ai', { method: 'POST' });
+        if (!res.ok) {
+          throw new Error(`サーバーエラー: ${res.status} ${res.statusText}`);
+        }
+        const data = await res.json();
+        // 成功した場合、結果を表示します
+        pre.textContent = JSON.stringify(data, null, 2);
+      } catch (e) {
+        // エラーが発生した場合、エラーメッセージを表示します
+        pre.textContent = `Error: ${e.message}`;
+      }
+    });
+  </script>
+</body>
+</html>
