@@ -1,32 +1,660 @@
 <!DOCTYPE html>
-<html>
+<html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <title>Netlify Function Test</title>
-</head>
-<body>
-  <h1>Netlify Function Test</h1>
-  <p>このボタンを押して、下のボックスにメッセージが表示されれば成功です。</p>
-  <button id="test-button" style="padding: 10px 20px; font-size: 16px;">Test Function</button>
-  <pre id="response" style="margin-top: 20px; padding: 10px; border: 1px solid #ccc; background-color: #f9f9f9;"></pre>
-  <script>
-    document.getElementById('test-button').addEventListener('click', async () => {
-      const pre = document.getElementById('response');
-      pre.textContent = 'Calling function...';
-      try {
-        // Netlifyの連携機能を呼び出します
-        const res = await fetch('/.netlify/functions/ask-ai', { method: 'POST' });
-        if (!res.ok) {
-          throw new Error(`サーバーエラー: ${res.status} ${res.statusText}`);
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RevoluX ガイド & AIアシスタント</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', 'Noto Sans JP', sans-serif;
+            background-color: #f8fafc;
+            scroll-behavior: smooth;
         }
-        const data = await res.json();
-        // 成功した場合、結果を表示します
-        pre.textContent = JSON.stringify(data, null, 2);
-      } catch (e) {
-        // エラーが発生した場合、エラーメッセージを表示します
-        pre.textContent = `Error: ${e.message}`;
-      }
-    });
-  </script>
+        .guide-content h2 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            margin-top: 2.5rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 2px solid #e5e7eb;
+        }
+        .guide-content h3 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+        }
+        .guide-content h4 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-top: 1.5rem;
+            margin-bottom: 0.75rem;
+        }
+        .guide-content p, .guide-content li {
+            line-height: 1.8;
+        }
+        .guide-content ul {
+            list-style-type: disc;
+            margin-left: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        .guide-content li {
+            margin-bottom: 0.5rem;
+        }
+        .guide-content strong {
+            color: #2563eb;
+        }
+        .guide-content table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+            margin-bottom: 1rem;
+        }
+        .guide-content th, .guide-content td {
+            border: 1px solid #d1d5db;
+            padding: 0.75rem;
+            text-align: left;
+        }
+        .guide-content th {
+            background-color: #f3f4f6;
+            font-weight: 600;
+        }
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        #answer-container table {
+            width: 100%;
+            min-width: 600px;
+            border-collapse: collapse;
+        }
+        #answer-container th, #answer-container td {
+            border: 1px solid #d1d5db;
+            padding: 0.75rem;
+            text-align: left;
+        }
+        #answer-container th {
+            background-color: #f9fafb;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800">
+    <div class="container mx-auto p-4 sm:p-6 lg:p-8 max-w-5xl">
+        
+        <header class="text-center mb-12">
+            <h1 class="text-4xl sm:text-5xl font-bold text-gray-900">RevoluX® ガイド & AIアシスタント</h1>
+            <p class="mt-4 text-lg text-gray-600">製品ガイドと、不明点を質問できるAIアシスタントです。</p>
+        </header>
+
+        <!-- トラブルシューティングガイド表示セクション -->
+        <article class="bg-white p-6 sm:p-8 rounded-2xl shadow-lg guide-content">
+            <h2>1. RevoluXシステム概要</h2>
+            <h3>1.1. RevoluXとは？</h3>
+            <p>RevoluXは、iCATが2012年に発売したオリジナルの歯科用コーンビームCTシステムです。PointNix社（韓国）製のCT装置に、iCATが長年のノウハウを基に開発した次世代CT再構成ソフトウェア<strong>「GIDORA（ギドラ）」</strong>を搭載。優れた操作性と高画質を両立し、CT診断に新たなスタンダードを提案します。</p>
+            <h4>主な特徴:</h4>
+            <ul>
+                <li><strong>次世代CT再構成ソフト「GIDORA」搭載</strong>: 金属アーティファクトの除去技術や、CT値の精度を向上させる各種補正技術により、これまで見えなかったものが「診える」ようになります。これにより、臨床的な骨質診断も可能にします。</li>
+                <li><strong>多機能一体型</strong>: 歯科用CT、高画質なデジタルパノラマ撮影を標準搭載。オプションでワンショットセファロ撮影にも対応可能です。</li>
+                <li><strong>高精細・高画質</strong>: FOV（撮影範囲）はφ8×8.5cm（微小角再構成でφ10cm）と診断に十分な領域をカバーし、エンドやペリオの診断に有効な高精細画像を提供します。</li>
+                <li><strong>Landmark System™との連携</strong>: インプラントシミュレーションソフト「LANDmarker®」やサージカルガイド「Landmark Guide™」と連携し、インプラント治療をトータルでサポートします。</li>
+            </ul>
+
+            <h3>1.2. システム構成</h3>
+            <h4>ハードウェア:</h4>
+            <ul>
+                <li><strong>RevoluX本体</strong>: CT、パノラマ、セファロ（オプション）の撮影を行います。</li>
+                <li><strong>撮影用PC</strong>: 撮影指示や画像データの処理、保存を行うサーバーPCです。RAID1構成によるデータ保護が標準仕様となっています。</li>
+                <li><strong>診断用PC / チェアサイドPC</strong>: 撮影データの閲覧、シミュレーション、患者説明に使用します。</li>
+                <li><strong>ネットワーク機器</strong>: 院内LANを構成するHUB、LANケーブル、無線ルータなど。</li>
+                <li><strong>ストレージ</strong>: バックアップ用の内蔵HDDまたは外付けHDD。NewTom製品ではNASが使用されます。</li>
+                <li><strong>周辺機器</strong>: 電源切替器、照射ボタン、UPS（無停電電源装置）、AVR（自動電圧調整器）など。</li>
+            </ul>
+            <h4>ソフトウェア:</h4>
+            <ul>
+                <li><strong>CDX-View</strong>: パノラマ、デンタル、口腔内カメラ画像の管理と撮影指示を行う基幹ソフトウェア。</li>
+                <li><strong>LANDmarker for RevoluX</strong>: CTデータの閲覧およびインプラントシミュレーションを行うソフトウェア。</li>
+                <li><strong>GIDORA</strong>: RevoluXで撮影したCTデータを高画質に再構成するiCAT独自のソフトウェア。</li>
+                <li><strong>CaretSquare</strong>: NewTom製品と共に導入された患者情報統合管理システム。RevoluXとも連携可能です。</li>
+                <li><strong>常駐ソフト</strong>:
+                    <ul>
+                        <li><strong>BunBackup</strong>: システムデータを自動でバックアップします。</li>
+                        <li><strong>Pinfo</strong>: レセコンからの患者情報をCDXに連携します。</li>
+                        <li><strong>KarteAgent</strong>: 撮影画像を他社製画像管理ソフトへ連携します。</li>
+                    </ul>
+                </li>
+            </ul>
+
+            <h3>1.3. 関連製品ラインナップ</h3>
+            <ul>
+                <li><strong>歯科用CT</strong>: NewTomシリーズ (GO, GiANO HR, VGi evo), GENDEX (保守のみ)</li>
+                <li><strong>デンタル用X線撮影装置</strong>: PSピックス (PSPIX2), X-VS</li>
+                <li><strong>口腔内カメラ</strong>: SOPRO617</li>
+            </ul>
+            
+            <h2>2. 基本操作マニュアル</h2>
+            <h3>2.1. システムの起動と終了</h3>
+            <ul>
+                <li><strong>起動</strong>: 毎朝、①本体スイッチをON → ②撮影用PCを起動 → ③CDX-Viewを起動 の順で行います。</li>
+                <li><strong>終了</strong>: 起動時と逆の順序で終了します。</li>
+                <li><strong>注意</strong>: 撮影用PCを再起動すると、チェアサイドPCとの連携が一時的に切断されます。再起動前にチェアサイドで作業中でないことを確認してください。</li>
+            </ul>
+            
+            <h3>2.2. 撮影手順（パノラマ）</h3>
+            <ol class="list-decimal list-inside space-y-2">
+                <li><strong>患者選択</strong>: CDX-Viewで撮影する患者を選択します。</li>
+                <li><strong>ソフト起動</strong>: 「パノラマ」タブを選択し、「新規撮影」アイコンをクリックします。</li>
+                <li><strong>患者位置づけ</strong>:
+                    <ul>
+                        <li><strong>顎台は常に「低」を使用</strong>し、下顎頭が切れないようにします。</li>
+                        <li>バイトチップのミゾをしっかり噛ませます。</li>
+                        <li><strong>眼耳平面が床と水平</strong>になるよう、指で確認しながらヘッドレストを調整します。</li>
+                        <li>撮影前に「唾を飲み込む」「撮影中は動かない」などの声がけをします。</li>
+                    </ul>
+                </li>
+                <li><strong>撮影</strong>: 準備完了後、撮影終了まで照射ボタンを押し続けます。</li>
+                <li><strong>患者退出</strong>: アームが退出位置へ移動後、患者を退出させ、「Ready」ボタンで本体をリセットします。</li>
+            </ol>
+            
+            <h2>3. トラブルシューティング & FAQ</h2>
+            <h3>3.1. よくある質問（FAQ）</h3>
+            <h4>Q. 撮影したパノラマ画像がおかしい（歪む、ぼやけるなど）</h4>
+            <p><strong>A.</strong> ほとんどの場合、患者様の位置づけが原因です。特に<strong>「顎台は常に【低】を使用する」「眼耳平面を水平にする」「バイトチップのミゾをしっかり噛む」</strong>の3点をご確認ください。首の傾きや撮影中の動きも画質に影響します。</p>
+            <h4>Q. デンタルスキャナ（PSPIX2）でスキャンした画像のサイズがおかしい</h4>
+            <p><strong>A.</strong> IPの輪郭が不明瞭な場合に発生しやすいです。レントゲンコーンの位置ずれ、線量不足、補綴物の面積が大きいなどが原因です。撮影方法を見直すか、大きいサイズのIPを使用してください。頻発する場合はサポートにご連絡ください。</p>
+            
+            <h3>3.2. エラーコード一覧</h3>
+            <h4>BunBackup エラーコード</h4>
+            <table>
+                <thead>
+                    <tr><th>コード</th><th>内容</th><th>主な原因と対処法</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td><strong>0</strong></td><td>エラーなし</td><td>正常に完了しています。</td></tr>
+                    <tr><td><strong>1</strong></td><td>バックアップ元のフォルダが見つかりません</td><td>フォルダの移動・削除、パス指定ミス。2台構成の場合、診断用PCを先にシャットダウンした可能性があります。</td></tr>
+                    <tr><td><strong>2</strong></td><td>バックアップ元のフォルダにアクセスできません</td><td>読み取り権限がない、ネットワーク切断、ファイルロックなど。<strong>USB外付けHDDの場合、HDDの「AUTO」設定を「ON」</strong>にすることで解決する場合があります。</td></tr>
+                    <tr><td><strong>9</strong></td><td>バックアップ元がシャドウコピーエラー</td><td>WindowsのVSSサービスに問題が発生しています。</td></tr>
+                </tbody>
+            </table>
+
+            <h4>RevoluX 本体エラーコード（コントロールパネル表示）</h4>
+            <ul>
+                <li><strong>Er PS-1</strong>: 電源関係のエラー。CT撮影時に頻発します。パワーボードや管球の不具合の可能性があり、サポートによる修理が必要です。UPSの設置で改善する場合もあります。</li>
+                <li><strong>Er PS-2</strong>: 管球の温度エラー。連続撮影で発生しやすいため、冷却時間をおいてください。</li>
+                <li><strong>Er PS-3</strong>: パワーボードの故障。パノラマ撮影時に発生しやすいです。サポートによる修理が必要です。</li>
+            </ul>
+
+            <h3>3.3. 症状別の対処法</h3>
+            <h4>装置本体・撮影に関する問題</h4>
+            <ul>
+                <li><strong>症状: 「本体の電源が入っていません」「本体の接続が確認できません」と表示される。</strong><br>対処法: 電源コンセント、ブレーカー、各種ケーブル（LAN、シリアルUSB）の接続を再確認し、PCと本体を再起動してください。</li>
+                <li><strong>症状: CT撮影時に「Invalid license key」エラーが出る。</strong><br>対処法: LANDmarkerのライセンス認証が外れています。USBドングル（ライセンスキー）を抜き差ししてください。</li>
+            </ul>
+            
+            <h2>4. 保守とサポート</h2>
+            <h3>4.1. 保守契約プラン</h3>
+            <p>設置後2年間は無償保証期間です。3年目以降は、有償の保守契約を強く推奨しています。</p>
+            <table>
+                <thead>
+                    <tr><th>プラン名</th><th><strong>プラチナコース（推奨）</strong></th><th><strong>ブロンズコース</strong></th></tr>
+                </thead>
+                <tbody>
+                    <tr><td><strong>年間費用</strong></td><td>3～5年目: 24万円<br>6～10年目: 28万円</td><td>3～5年目: 12万円<br>6～10年目: 15万円</td></tr>
+                    <tr><td><strong>サポート内容</strong></td><td>電話サポート, 年1回保守点検, <strong>訪問出張修理費, 部品代金, ソフトウェアVerUP, PC故障時代品提供</strong></td><td>電話サポート, 年1回保守点検</td></tr>
+                    <tr><td><strong>特徴</strong></td><td>X線管球等の高額部品も保証対象。万一の際に追加費用が発生せず、費用の予算化が可能です。</td><td>訪問修理や部品交換は都度有償となります。</td></tr>
+                </tbody>
+            </table>
+            <p class="text-sm text-gray-600 mt-2">※価格は税別です。2022年以降の導入医院様にはプラチナコースのみをご案内しています。</p>
+        </article>
+
+        <!-- AIアシスタントセクション -->
+        <hr class="my-12 border-gray-300">
+        <section id="ai-assistant" class="bg-white p-6 sm:p-8 rounded-2xl shadow-lg">
+            <header class="text-center mb-6">
+                <h2 class="text-3xl font-bold text-gray-900">AIアシスタントに質問する</h2>
+                <p class="mt-2 text-gray-600">上記のガイド内容に関するご質問にAIがお答えします。</p>
+            </header>
+
+            <div class="mb-6">
+                <label for="question" class="block text-lg font-semibold text-gray-700 mb-2">質問を入力してください:</label>
+                <textarea id="question" rows="4" class="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow duration-200" placeholder="例：保守契約プランを比較してください。"></textarea>
+            </div>
+            
+            <div class="text-center">
+                <button id="ask-button" class="bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 transition-all duration-300 transform hover:scale-105">
+                    AIに質問する
+                </button>
+            </div>
+
+            <div id="loading-indicator" class="hidden flex justify-center items-center my-6">
+                <div class="loader"></div>
+                <p class="ml-4 text-gray-600">AIが回答を生成中です...</p>
+            </div>
+
+            <div id="answer-section" class="mt-8 hidden">
+                <h3 class="text-2xl font-bold text-gray-800 border-b-2 pb-2 mb-4">AIからの回答</h3>
+                <div id="answer-container" class="prose max-w-none text-gray-700 leading-relaxed bg-gray-50 p-4 rounded-lg">
+                    <!-- AIの回答がここに表示されます -->
+                </div>
+            </div>
+        </section>
+        
+        <footer class="text-center mt-12 text-sm text-gray-500">
+            <p>&copy; 2024 RevoluX AI Assistant. All rights reserved.</p>
+            <p class="mt-1">このAIは提供されたガイドの情報のみを基に回答します。</p>
+        </footer>
+    </div>
+
+    <!-- ガイドの全内容をAIのコンテキスト用に非表示で保持 -->
+    <div id="guide-content-for-ai" style="display:none;">
+# RevoluX® トラブルシューティング & メンテナンスガイド
+
+本ガイドは、歯科用CT「RevoluX」および関連システムをご利用の歯科医療従事者の皆様を対象に、製品の概要、日常的な操作手順、トラブルシューティング、保守サービスに関する情報を包括的にまとめたものです。
+
+## 1. RevoluXシステム概要
+
+### 1.1. RevoluXとは？
+
+RevoluXは、iCATが2012年に発売したオリジナルの歯科用コーンビームCTシステムです。PointNix社（韓国）製のCT装置に、iCATが長年のノウハウを基に開発した次世代CT再構成ソフトウェア**「GIDORA（ギドラ）」**を搭載。優れた操作性と高画質を両立し、CT診断に新たなスタンダードを提案します。
+
+**主な特徴:**
+
+* **次世代CT再構成ソフト「GIDORA」搭載**: 金属アーティファクトの除去技術や、CT値の精度を向上させる各種補正技術により、これまで見えなかったものが「診える」ようになります。これにより、臨床的な骨質診断も可能にします。
+
+* **多機能一体型**: 歯科用CT、高画質なデジタルパノラマ撮影を標準搭載。オプションでワンショットセファロ撮影にも対応可能です。
+
+* **高精細・高画質**: FOV（撮影範囲）はφ8×8.5cm（微小角再構成でφ10cm）と診断に十分な領域をカバーし、エンドやペリオの診断に有効な高精細画像を提供します。
+
+* **Landmark System™との連携**: インプラントシミュレーションソフト「LANDmarker®」やサージカルガイド「Landmark Guide™」と連携し、インプラント治療をトータルでサポートします。
+
+### 1.2. システム構成
+
+RevoluXシステムは、以下のハードウェアとソフトウェアで構成されています。
+
+**ハードウェア:**
+
+* **RevoluX本体**: CT、パノラマ、セファロ（オプション）の撮影を行います。
+
+* **撮影用PC**: 撮影指示や画像データの処理、保存を行うサーバーPCです。RAID1構成によるデータ保護が標準仕様となっています。
+
+* **診断用PC / チェアサイドPC**: 撮影データの閲覧、シミュレーション、患者説明に使用します。
+
+* **ネットワーク機器**: 院内LANを構成するHUB、LANケーブル、無線ルータなど。
+
+* **ストレージ**: バックアップ用の内蔵HDDまたは外付けHDD。NewTom製品ではNASが使用されます。
+
+* **周辺機器**: 電源切替器、照射ボタン、UPS（無停電電源装置）、AVR（自動電圧調整器）など。
+
+**ソフトウェア:**
+
+* **CDX-View**: パノラマ、デンタル、口腔内カメラ画像の管理と撮影指示を行う基幹ソフトウェア。
+
+* **LANDmarker for RevoluX**: CTデータの閲覧およびインプラントシミュレーションを行うソフトウェア。
+
+* **GIDORA**: RevoluXで撮影したCTデータを高画質に再構成するiCAT独自のソフトウェア。
+
+* **CaretSquare**: NewTom製品と共に導入された患者情報統合管理システム。RevoluXとも連携可能です。
+
+* **常駐ソフト**:
+
+  * **BunBackup**: システムデータを自動でバックアップします。
+
+  * **Pinfo**: レセコンからの患者情報をCDXに連携します。
+
+  * **KarteAgent**: 撮影画像を他社製画像管理ソフトへ連携します。
+
+### 1.3. 関連製品ラインナップ
+
+iCATでは、RevoluX以外にも多様な画像診断ソリューションを提供しています。
+
+* **歯科用CT**:
+
+  * **NewTomシリーズ**: イタリアCefla社製のCT。撮影範囲に応じて「GO」「GiANO HR」「VGi evo」の3機種があります。
+
+  * **GENDEX**: 旧取扱い製品。現在は保守対応のみ。
+
+* **デンタル用X線撮影装置**:
+
+  * **PSピックス (PSPIX2)**: 省スペースなIPスキャナー。
+
+  * **X-VS**: リアルタイム診断が可能なデンタル用X線センサー。
+
+* **口腔内カメラ**:
+
+  * **SOPRO617**: 鮮明な画質と優れた操作性を持つ口腔内カメラ。
+
+## 2. 基本操作マニュアル
+
+### 2.1. システムの起動と終了
+
+* **起動**: 毎朝、①本体スイッチをON → ②撮影用PCを起動 → ③CDX-Viewを起動 の順で行います。
+
+* **終了**: 起動時と逆の順序で終了します。
+
+* **注意**: 撮影用PCを再起動すると、チェアサイドPCとの連携が一時的に切断されます。再起動前にチェアサイドで作業中でないことを確認してください。
+
+### 2.2. 撮影手順（パノラマ）
+
+1. **患者選択**: CDX-Viewで撮影する患者を選択します。
+
+2. **ソフト起動**: 「パノラマ」タブを選択し、「新規撮影」アイコンをクリックします。
+
+3. **患者位置づけ**:
+
+   * **顎台は常に「低」を使用**し、下顎頭が切れないようにします。
+
+   * バイトチップのミゾをしっかり噛ませます。
+
+   * **眼耳平面が床と水平**になるよう、指で確認しながらヘッドレストを調整します。
+
+   * 撮影前に「唾を飲み込む」「撮影中は動かない」などの声がけをします。
+
+4. **撮影**: 準備完了後、撮影終了まで照射ボタンを押し続けます。
+
+5. **患者退出**: アームが退出位置へ移動後、患者を退出させ、「Ready」ボタンで本体をリセットします。
+
+### 2.3. 撮影手順（CT）
+
+1. **患者選択**: CDX-Viewで撮影する患者を選択します。
+
+2. **ソフト起動**: 「CT」タブを選択し、空欄をクリック後、「新規撮影」ボタンをクリックします。
+
+3. **撮影条件選択**: 再構成の直径（Φ8/Φ10）、撮影モード（フル/ハーフ）などを選択します。
+
+4. **患者位置づけ**:
+
+   * チンレストに顎を乗せ、バイトチップを切端で噛ませます。
+
+   * **鼻聴導線が床と平行**になるようにヘッドレストを調整・固定します。
+
+   * ハンドルをクロスして握るよう指示し、肩幅を狭くします。
+
+5. **スカウト撮影（試し撮り）**: 「スカウト撮影」アイコンをクリックし、位置を確認します。
+
+6. **本撮影**: 「CT撮影」アイコンをクリックし、撮影終了まで照射ボタンを押し続けます。
+
+7. **患者退出・再構成**: 撮影後、アームが退出位置へ移動したら患者を退出させます。その後、PCでCTデータの再構成が自動または手動で開始されます。
+
+### 2.4. 画像の管理とエクスポート
+
+* **患者名を間違えた場合**:
+
+  * **CT以外**: CDX-View上で画像をコピーし、正しい患者に貼り付け後、元の画像を削除します。
+
+  * **CT画像**: CDX-View上では移動不可。再構成後にLANDmarker側で患者情報を変更します。
+
+* **他院へのデータ共有**:
+
+  * **パノラマ/デンタル**: CDX-ViewからJPEG形式でエクスポートします。
+
+  * **CT**: LANDmarkerからDICOMデータやビューワ付きデータをCD-Rまたはフォルダへ出力します。
+
+## 3. トラブルシューティング & FAQ
+
+### 3.1. よくある質問（FAQ）
+
+**Q. 撮影したパノラマ画像がおかしい（歪む、ぼやけるなど）**
+**A.** ほとんどの場合、患者様の位置づけが原因です。特に**「顎台は常に【低】を使用する」「眼耳平面を水平にする」「バイトチップのミゾをしっかり噛む」**の3点をご確認ください。首の傾きや撮影中の動きも画質に影響します。
+
+**Q. 間違った患者で撮影してしまった**
+**A.** 上記「2.4. 画像の管理とエクスポート」をご参照ください。CT以外の画像はCDX-View内で移動可能です。
+
+**Q. デンタルスキャナ（PSPIX2）でスキャンした画像のサイズがおかしい**
+**A.** IPの輪郭が不明瞭な場合に発生しやすいです。レントゲンコーンの位置ずれ、線量不足、補綴物の面積が大きいなどが原因です。撮影方法を見直すか、大きいサイズのIPを使用してください。頻発する場合はサポートにご連絡ください。
+
+**Q. デンタルセンサー（X-VS）が「準備完了」にならない**
+**A.** USBの接触不良や電力不足が考えられます。「再接続ボタン」をクリックするか、PCとUSBハブの再起動、ケーブルの抜き差しをお試しください。
+
+**Q. 他社画像管理ソフト（DentalXなど）へ画像が転送されない**
+**A.** 連携ソフト「KarteAgent」が正常に動作しているか確認します。転送先に患者情報が存在しない、サーバー機でデータを開いている、Macの共有フォルダがマウントされていない、などの原因も考えられます。強制的に手動で転送することも可能です。
+
+### 3.2. エラーコード一覧
+
+#### BunBackup エラーコード
+
+| コード | 内容 | 主な原因と対処法 |
+|:---:|:---|:---|
+| **0** | エラーなし | 正常に完了しています。 |
+| **1** | バックアップ元のフォルダが見つかりません | フォルダの移動・削除、パス指定ミス。2台構成の場合、診断用PCを先にシャットダウンした可能性があります。 |
+| **2** | バックアップ元のフォルダにアクセスできません | 読み取り権限がない、ネットワーク切断、ファイルロックなど。**USB外付けHDDの場合、HDDの「AUTO」設定を「ON」**にすることで解決する場合があります。 |
+| **3** | ネットワークにログインできません | ネットワーク接続や認証情報に問題があります。 |
+| **4** | バックアップ先が見つかりません | 保存先のフォルダが存在しません。 |
+| **9** | バックアップ元がシャドウコピーエラー | WindowsのVSSサービスに問題が発生しています。 |
+
+#### RevoluX 本体エラーコード（コントロールパネル表示）
+
+* **Er PS-1**: 電源関係のエラー。CT撮影時に頻発します。パワーボードや管球の不具合の可能性があり、サポートによる修理が必要です。UPSの設置で改善する場合もあります。
+
+* **Er PS-2**: 管球の温度エラー。連続撮影で発生しやすいため、冷却時間をおいてください。
+
+* **Er PS-3**: パワーボードの故障。パノラマ撮影時に発生しやすいです。サポートによる修理が必要です。
+
+### 3.3. 症状別の対処法
+
+#### 装置本体・撮影に関する問題
+
+* **症状**: 装置から異音がする。
+
+  * **対処法**: 音の種類（ピーピー、カタカタなど）を確認し、サポートにご連絡ください。UPSのバッテリー警告音の場合もあります。
+
+* **症状**: 「本体の電源が入っていません」「本体の接続が確認できません」と表示される。
+
+  * **対処法**: 電源コンセント、ブレーカー、各種ケーブル（LAN、シリアルUSB）の接続を再確認し、PCと本体を再起動してください。
+
+* **症状**: CT撮影時に「Invalid license key」エラーが出る。
+
+  * **対処法**: LANDmarkerのライセンス認証が外れています。USBドングル（ライセンスキー）を抜き差ししてください。
+
+#### ソフトウェアに関する問題
+
+* **症状**: CDX-Viewが起動しない（"Server ini not found"など）。
+
+  * **対処法**: LANケーブルの接続やネットワーク設定を確認してください。
+
+* **症状**: GIDORAでCTの再構成ができない、エラーが出る。
+
+  * **対処法**: 元データ（PRJ/SLC）の破損、LANDmarkerが起動したままになっている、などが原因です。
+
+* **症状**: LANDmarkerで症例一覧の表示が非常に遅い。
+
+  * **対処法**: Ver.8.0以降で発生する問題です。症例一覧ツール（サポート提供）の導入で改善します。
+
+* **症状**: BunBackupでバックアップができない。
+
+  * **対処法**: 上記エラーコード一覧を参照してください。撮影動作とバックアップのタイミングが競合している場合、設定変更で解決可能です。
+
+#### PC・周辺機器に関する問題
+
+* **症状**: PCが起動しない、画面が真っ暗。
+
+  * **対処法**: 電源ケーブルの接続を確認し、不要なUSB機器を外して放電作業をお試しください。
+
+* **症状**: 共有フォルダにアクセスできない。
+
+  * **対処法**: Windowsのアップデート後などに発生します。ネットワーク共有設定やSMB1.0の有効化が必要な場合があります。
+
+* **症状**: 口腔内カメラが映らない、撮影できない。
+
+  * **対処法**: USBケーブルの抜き差し、ドライバの再インストールをお試しください。Surfaceなどでは給電不足の可能性があるため、セルフパワーUSBハブを使用してください。
+
+* **症状**: IPスキャナ（PSPIX2）で通信エラー（エラー207など）が起きる。
+
+  * **対処法**: LANケーブルの接続や固定IPアドレスの設定を確認し、PCと装置を再起動してください。エラー207はIPの挿入遅れなどの操作ミスが主な原因です。クリーニングプレートでの清掃も有効です。
+
+## 4. 保守とサポート
+
+iCATでは、お客様に安心して製品をご利用いただくため、充実したサポート体制と保守プランをご用意しています。
+
+### 4.1. 保守契約プラン
+
+設置後2年間は無償保証期間です。3年目以降は、有償の保守契約を強く推奨しています。
+
+| プラン名 | **プラチナコース（推奨）** | **ブロンズコース** |
+|:---:|:---:|:---:|
+| **年間費用** | 3～5年目: 24万円<br>6～10年目: 28万円 | 3～5年目: 12万円<br>6～10年目: 15万円 |
+| **サポート内容** | ・電話サポート<br>・年1回保守点検<br>・**訪問出張修理費**<br>・**部品代金**<br>・**ソフトウェアVerUP**<br>・**PC故障時代品提供** | ・電話サポート<br>・年1回保守点検 |
+| **特徴** | X線管球（450万円相当）やFPD（150万円相当）などの高額部品も保証対象。万一の際に追加費用が発生せず、費用の予算化が可能です。 | 訪問修理や部品交換は都度有償となります。 |
+
+※価格は税別です。2022年以降の導入医院様にはプラチナコースのみをご案内しています。
+
+### 4.2. サポート体制
+
+* **遠隔（リモート）サポート**: 専門スタッフがインターネット経由でお客様のPCを操作し、迅速に問題を解決します。
+
+* **訪問サポート**: 全国に展開するサービス拠点から、専門スタッフが訪問して対応します。
+
+* **土曜日対応**: 土曜日も専門スタッフが常駐し、週末のトラブルにも迅速に対応します。
+
+* **画像移管サービス**: 新規導入時に、旧装置の画像データをiCATのシステムへ移行するサービスも提供しています（有償）。
+
+**【情報提供に関するご注意】**
+当サイトに掲載されている製品・サービス等の情報は、歯科医療従事者を対象としたものです。一般の方への情報提供を目的としたものではありませんので、ご了承ください。当サイトでは、利便性の向上のためにCookieを使用しています。
+    </div>
+
+    <script>
+        // DOM要素の取得
+        const askButton = document.getElementById('ask-button');
+        const questionTextarea = document.getElementById('question');
+        const loadingIndicator = document.getElementById('loading-indicator');
+        const answerSection = document.getElementById('answer-section');
+        const answerContainer = document.getElementById('answer-container');
+        const guideContentForAI = document.getElementById('guide-content-for-ai').innerText;
+
+        // ボタンのクリックイベントリスナー
+        askButton.addEventListener('click', handleAskButtonClick);
+        
+        // Enterキーでの送信機能を削除
+        // questionTextarea.addEventListener('keydown', (event) => {
+        //     if (event.key === 'Enter' && !event.shiftKey) {
+        //         event.preventDefault();
+        //         handleAskButtonClick();
+        //     }
+        // });
+
+        async function handleAskButtonClick() {
+            const question = questionTextarea.value.trim();
+            if (!question) {
+                answerContainer.innerHTML = '<p class="text-red-500">質問を入力してください。</p>';
+                answerSection.classList.remove('hidden');
+                return;
+            }
+
+            // UIを更新
+            loadingIndicator.classList.remove('hidden');
+            answerSection.classList.add('hidden');
+            askButton.disabled = true;
+            askButton.classList.add('opacity-50', 'cursor-not-allowed');
+
+            try {
+                // AIに質問を送信
+                const answer = await askAI(question, guideContentForAI);
+                // 回答を表示
+                displayAnswer(answer);
+            } catch (error) {
+                console.error('Error fetching AI response:', error);
+                displayAnswer('AIからの回答の取得中にエラーが発生しました。しばらくしてからもう一度お試しください。');
+            } finally {
+                // UIを元に戻す
+                loadingIndicator.classList.add('hidden');
+                askButton.disabled = false;
+                askButton.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+        }
+        
+        // AIに質問を送信する関数
+async function askAI(question, context) {
+    const functionUrl = '/.netlify/functions/ask-ai';
+    try {
+        const response = await fetch(functionUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ question, context })
+        });
+        if (!response.ok) {
+            const errorText = await response.text();
+            try {
+                const errorResult = JSON.parse(errorText);
+                throw new Error(errorResult.error || `サーバーエラー (Status: ${response.status})`);
+            } catch (e) {
+                throw new Error(`サーバーから予期しない応答がありました (Status: 404 - Not Found)。\nNetlifyのフォルダ構成やファイル名が正しいか確認してください。`);
+            }
+        }
+        const result = await response.json();
+        return result.answer;
+    } catch (error) {
+        console.error('Function call failed:', error);
+        return `エラーが発生しました: ${error.message}`;
+    }
+}
+
+
+
+
+        // 回答を表示する関数
+        function displayAnswer(answer) {
+            let html = answer;
+
+            // 1. Process Tables
+            const tableRegex = /((?:\|.*\|(?:\r\n|\n|\r))+)/g;
+            html = html.replace(tableRegex, (tableMd) => {
+                const rows = tableMd.trim().split(/\r\n|\n|\r/);
+                if (rows.length < 2) return tableMd; // Not a valid table
+
+                // Handle header
+                const headerCells = rows[0].slice(1, -1).split('|').map(h => `<th class="p-3 border border-gray-300 bg-gray-100 font-semibold">${h.trim()}</th>`).join('');
+                
+                // Handle body, skipping separator line
+                const bodyRows = rows.slice(2).map(row => {
+                    const cells = row.slice(1, -1).split('|').map(c => `<td class="p-3 border border-gray-300">${c.trim().replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')}</td>`).join('');
+                    return `<tr>${cells}</tr>`;
+                }).join('');
+
+                return `<div class="overflow-x-auto my-4 rounded-lg border border-gray-200"><table class="min-w-full text-sm"><thead><tr>${headerCells}</tr></thead><tbody>${bodyRows}</tbody></table></div>`;
+            });
+
+            // 2. Process Lists
+            const listRegex = /((?:\* .*(?:\r\n|\n|\r)?)+)/g;
+            html = html.replace(listRegex, (listMd) => {
+                const items = listMd.trim().split(/\r\n|\n|\r/).map(item => {
+                    if (item.trim().startsWith('* ')) {
+                        return `<li>${item.substring(2).trim().replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')}</li>`;
+                    }
+                    return '';
+                }).join('');
+                return `<ul class="list-disc list-inside my-4 space-y-2">${items}</ul>`;
+            });
+
+            // 3. Process remaining text as paragraphs with bold
+            const remainingParts = html.split(/(<(?:div|ul)[\s\S]*?(?:<\/div>|<\/ul>))/g);
+
+            html = remainingParts.map(part => {
+                if (part.startsWith('<div') || part.startsWith('<ul')) {
+                    return part; // It's already HTML
+                }
+                return part
+                    .trim()
+                    .split(/\r\n|\n|\r/)
+                    .filter(line => line.trim() !== '' && !line.trim().startsWith('|--')) // Filter out table separators
+                    .map(line => `<p>${line.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')}</p>`)
+                    .join('');
+            }).join('');
+            
+            answerContainer.innerHTML = html;
+            answerSection.classList.remove('hidden');
+        }
+
+    </script>
 </body>
 </html>
